@@ -1,0 +1,64 @@
+#
+# List of commands that will give you access to my-dockers containers.
+#
+# command_name: # This command will be available directly in the terminal.
+#   dockerfile: relative/path/to.Dockerfile
+#   share:
+#     # Optional. Can be also one string value instead of list.
+#     # The path will be mounted in docker at the same location as
+#     # in the host.
+#     - /path/to/shared/directory
+#     - /second/shared/directory
+#   append: |
+#     # Optional. String or list of strings that will be appended to
+#     # the end of Dockerfile. You can customize the docker with it.
+#     RUN git config --global user.name "Mona Lisa" && \
+#         git config --global user.email Mona.Lisa@example.com
+#   options:
+#     # An object containing docker container run options.
+#     # See https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.run
+#     mem_limit: 2g
+#
+# WARNING!!! After modifying command names, remember to do update with
+# the following command:
+#
+#     my-dockers
+#
+
+
+docs-zephyr:
+  dockerfile: /home/doki/work/zephyr/docs-zephyr.Dockerfile
+  append: |
+    RUN --mount=type=bind,target=/home/doki/work/zephyr/zephyr/doc/requirements.txt,source=./zephyr/doc/requirements.txt \
+    pip install -r /home/doki/work/zephyr/zephyr/doc/requirements.txt
+    WORKDIR /home/doki/work/zephyr
+  share: /home/doki/work/zephyr
+  options:
+    mem_limit: 5g
+    memswap_limit: 5g
+    cpuset_cpus: 0-3
+
+docker-example:
+  dockerfile: scripts/example.Dockerfile
+  share: /home/doki/my-dockers-example
+
+# spidermonkey:
+#   dockerfile: /home/doki/my/spidermonkey-wasi/project/scripts/Dockerfile
+#   share: /home/doki/my/spidermonkey-wasi
+#   append: |
+#     ARG UN
+#     ARG UI
+#     ARG GN
+#     ARG GI
+#     RUN groupadd -g $GI $GN && \
+#       useradd -s `which bash` -m -g $GI -G adm,dialout,cdrom,sudo,dip,plugdev -u $UI $UN && \
+#       echo "$UN ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/$UN && \
+#       echo >> /home/$UN/.profile
+#     USER $UN:$GN
+#     WORKDIR /home/$UN
+#     RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && \
+#       export NVM_DIR=/home/$UN/.nvm && \
+#       . $NVM_DIR/nvm.sh && \
+#       nvm install 18
+#     RUN export PATH=$PATH:`echo /home/doki/.nvm/versions/node/v18*`/bin && \
+#       echo PATH="\$PATH:$PATH" >> /home/$UN/.profile
