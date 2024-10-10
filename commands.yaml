@@ -38,6 +38,26 @@ docs-zephyr:
     memswap_limit: 5g
     cpuset_cpus: 0-3
 
+ncs:
+  dockerfile: ncs.Dockerfile
+  options:
+    mem_limit: 5g
+    memswap_limit: 5g
+    network_mode: host
+    environment:
+      - DISPLAY=:0
+  password:
+    FILES_NORDICSEMI_COM_TOKEN: Artifactory token
+  append: |
+    RUN --mount=type=cache,target=/home/$UN/.cache/pip,sharing=locked \
+      --mount=type=bind,target=/home/doki/req,source=./_tmp/req \
+      sudo chmod 777 /home/$UN/.cache/pip && \
+      pip install -r req/z/requirements.txt -r req/zd/requirements.txt -r req/n/requirements.txt
+# TODO: Run script before build
+  share:
+    - /tmp/.X11-unix
+    - /home/doki/work
+
 docker-example:
   dockerfile: scripts/example.Dockerfile
   share: /home/doki/my-dockers-example
