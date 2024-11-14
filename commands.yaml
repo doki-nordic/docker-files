@@ -50,10 +50,11 @@ ncs:
     FILES_NORDICSEMI_COM_TOKEN: Artifactory token
   append: |
     RUN --mount=type=cache,target=/home/$UN/.cache/pip,sharing=locked \
-      --mount=type=bind,target=/home/doki/req,source=./_tmp/req \
+      --mount=type=bind,target=/home/$UN/req,source=./_tmp/req \
       sudo chmod 777 /home/$UN/.cache/pip && \
       pip install -r req/z/requirements.txt -r req/zd/requirements.txt -r req/n/requirements.txt
-# TODO: Run script before build
+# TODO: Run script on host before build
+# TODO: Run script on guest after build and create new image based on modified docker container `docker commit`
   share:
     - /tmp/.X11-unix
     - /home/doki/work
@@ -62,20 +63,29 @@ docker-example:
   dockerfile: scripts/example.Dockerfile
   share: /home/doki/my-dockers-example
 
-# spidermonkey:
-#   dockerfile: /home/doki/my/spidermonkey-wasi/project/scripts/Dockerfile
-#   share: /home/doki/my/spidermonkey-wasi
-#   append: |
-#     ARG UN
-#     ARG UI
-#     ARG GN
-#     ARG GI
-#     RUN groupadd -g $GI $GN && \
-#       useradd -s `which bash` -m -g $GI -G adm,dialout,cdrom,sudo,dip,plugdev -u $UI $UN && \
-#       echo "$UN ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/$UN && \
-#       echo >> /home/$UN/.profile
-#     USER $UN:$GN
-#     WORKDIR /home/$UN
+spidermonkey:
+  dockerfile: /home/doki/my/spidermonkey-sandbox/sandbox/scripts/Dockerfile
+  options:
+    network_mode: host
+    environment:
+      - DISPLAY=:0
+  share:
+    - /tmp/.X11-unix
+    - /home/doki/my/spidermonkey-sandbox
+  append: |
+    ARG UN
+    ARG UI
+    ARG GN
+    ARG GI
+    RUN groupadd -g $GI $GN && \
+      useradd -s `which bash` -m -g $GI -G adm,dialout,cdrom,sudo,dip,plugdev -u $UI $UN && \
+      echo "$UN ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/$UN
+    USER $UN:$GN
+    WORKDIR /home/$UN
+    ENV PATH=$PATH:/home/$UN/.local/bin:/usr/local/nvm/versions/node/v18.20.4/bin
+    RUN mkdir -p /home/$UN/.local/bin && \
+      mkdir -p /home/$UN/.cache
+
 #     RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && \
 #       export NVM_DIR=/home/$UN/.nvm && \
 #       . $NVM_DIR/nvm.sh && \
