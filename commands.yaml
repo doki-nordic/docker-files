@@ -12,12 +12,42 @@
 #   append: |
 #     # Optional. String or list of strings that will be appended to
 #     # the end of Dockerfile. You can customize the docker with it.
-#     RUN git config --global user.name "Mona Lisa" && \
+#     RUN git config --global user.name "Mona Lisa" && \\
 #         git config --global user.email Mona.Lisa@example.com
 #   options:
 #     # An object containing docker container run options.
 #     # See https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.run
 #     mem_limit: 2g
+#   prompt:
+#     # Ask user for input before building the image. Key is the argument passed to the
+#     # Dockerfile, value is a prompt message that user will see.
+#     DOWNLOAD_URL: Provide download URL
+#   password:
+#     # Ask user for password before building the image. Key is the secret id passed to the
+#     # Dockerfile, value is a prompt message that user will see.
+#     # Use "RUN --mount=type=secret" to get access to the secret.
+#     TOKEN: User token
+#   postbuild: |
+#     # Execute bash script after building the image. Available environment variables:
+#     # - MY_DOCKERS_COMMAND     The image is build for this my-dockers command.
+#     # - MY_DOCKERS_DOCKERFILE  The Dockerfile used.
+#     # - MY_DOCKERS_CONFIG      The "commands.yaml" file that contains this configuration.
+#     # - MY_DOCKERS_TAG         The output image tag.
+#     # - PROMPT_*               The value from "prompt" input.
+#     # - PASSWORD_*             The value from "password" input.
+#     # The current directory is not changed when script is executed.
+#     # If you want to make some changes to the image, create container from
+#     # $MY_DOCKERS_TAG image, execute commands in it and commit back as $MY_DOCKERS_TAG,
+#     $ for example:
+#     docker run --name tmp-cnt $MY_DOCKERS_TAG bash -c 'echo echo Docker started >> ~/.bashrc'
+#     docker commit tmp-cnt tmp-img
+#     docker container rm tmp-cnt
+#     docker rmi $MY_DOCKERS_TAG
+#     docker tag tmp-img $MY_DOCKERS_TAG
+#     docker rmi tmp-img
+#   prebuild: |
+#     # The same as "postbuild", but before the build.
+#     echo Starting image build...
 #
 # WARNING!!! After modifying command names, remember to do update with
 # the following command:
@@ -48,13 +78,21 @@ ncs:
       - DISPLAY=:0
   password:
     FILES_NORDICSEMI_COM_TOKEN: Artifactory token
+  prebuild: |
+    `dirname $MY_DOCKERS_DOCKERFILE`/utils/ncs-req.sh
   append: |
     RUN --mount=type=cache,target=/home/$UN/.cache/pip,sharing=locked \
       --mount=type=bind,target=/home/$UN/req,source=./_tmp/req \
       sudo chmod 777 /home/$UN/.cache/pip && \
-      pip install -r req/z/requirements.txt -r req/zd/requirements.txt -r req/n/requirements.txt
-# TODO: Run script on host before build
-# TODO: Run script on guest after build and create new image based on modified docker container `docker commit`
+      pip install -r req/z/requirements.txt -r req/n/requirements.txt
+  postbuild: |
+    docker run --privileged -v /dev/bus/usb/:/dev/bus/usb --name tmp-cnt $MY_DOCKERS_TAG \
+      bash -c 'sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y -qq /opt/nrf-command-line-tools/share/JLink_Linux_V794e_x86_64.deb --fix-broken'
+    docker commit tmp-cnt tmp-img
+    docker container rm tmp-cnt
+    docker rmi $MY_DOCKERS_TAG
+    docker tag tmp-img $MY_DOCKERS_TAG
+    docker rmi tmp-img
   share:
     - /tmp/.X11-unix
     - /home/doki/work
