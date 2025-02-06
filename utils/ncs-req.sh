@@ -21,25 +21,20 @@ find_file () {
 	_path=
 }
 
-process_requirements() {
-	mkdir -p ~/.my-req
-	_hash_file=~/.my-req/`echo $2 | xargs echo -n | md5sum | cut -f 1 -d " " | xargs echo -n`
-	_hash_cur=`cat $_hash_file 2> /dev/null || true`
-	_hash_exp=`cat $1/$2 | md5sum | cut -f 1 -d " " | xargs echo -n`
-	if [[ "$_hash_cur" != "$_hash_exp" ]]; then
-		echo Installing dependencies from $1/$2
-		pip install -r $1/$2
-		echo -n $_hash_exp > $_hash_file
-	fi
-}
+REQ_DIR=`dirname $MY_DOCKERS_DOCKERFILE`/_tmp/req
+
+rm -Rf $REQ_DIR
+mkdir -p $REQ_DIR/z
+mkdir -p $REQ_DIR/n
+touch $REQ_DIR/z/requirements.txt
+touch $REQ_DIR/n/requirements.txt
 
 find_file zephyr/scripts/requirements.txt
 if [ ! -z "$_path" ]; then
-	process_requirements $_path zephyr/scripts/requirements.txt
-	source $_path/zephyr/zephyr-env.sh
+	cp $_path/zephyr/scripts/*.txt $REQ_DIR/z
 fi
 
 find_file nrf/scripts/requirements.txt
 if [ ! -z "$_path" ]; then
-	process_requirements $_path nrf/scripts/requirements.txt
+	cp $_path/zephyr/scripts/*.txt $REQ_DIR/n
 fi

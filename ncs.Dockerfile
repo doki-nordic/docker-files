@@ -47,6 +47,17 @@ RUN --mount=type=cache,target=/var/cache/cwget,sharing=locked \
 	cd .. && \
 	rm -Rf tmp
 
+ARG ARG_OZONE_URL=https://www.segger.com/downloads/jlink/Ozone_Linux_x86_64.deb
+
+# Install Segger Ozone
+RUN --mount=type=cache,target=/var/cache/cwget,sharing=locked \
+	mkdir -p tmp && \
+	cd tmp && \
+	cwget.sh "$ARG_OZONE_URL" Ozone_Linux_x86_64.deb && \
+	DEBIAN_FRONTEND=noninteractive apt install -y -qq `realpath Ozone_Linux_x86_64.deb` --fix-broken && \
+	cd .. && \
+	rm -Rf tmp
+
 # The my-dockers scripts will provide user information allowing
 # to user your user name from host.
 ARG UN
@@ -65,12 +76,14 @@ RUN mkdir -p /home/$UN/.local/bin && \
 	mkdir -p /home/$UN/.cache
 
 # Install west
-RUN pip install west
+RUN --mount=type=cache,target=/home/$UN/.cache/pip,sharing=locked \
+	sudo chmod 777 /home/$UN/.cache/pip && \
+	pip install west
 
-ARG ARG_ZEPHYR_SDK=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.8/zephyr-sdk-0.16.8_linux-x86_64_minimal.tar.xz
-ARG ARG_ZEPHYR_SDK_HOST=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.8/hosttools_linux-x86_64.tar.xz
-ARG ARG_ZEPHYR_SDK_ARM=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.8/toolchain_linux-x86_64_arm-zephyr-eabi.tar.xz
-ARG ARG_ZEPHYR_SDK_RISCV=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.8/toolchain_linux-x86_64_riscv64-zephyr-elf.tar.xz
+ARG ARG_ZEPHYR_SDK=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.0/zephyr-sdk-0.17.0_linux-x86_64_minimal.tar.xz
+ARG ARG_ZEPHYR_SDK_HOST=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.0/hosttools_linux-x86_64.tar.xz
+ARG ARG_ZEPHYR_SDK_ARM=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.0/toolchain_linux-x86_64_arm-zephyr-eabi.tar.xz
+ARG ARG_ZEPHYR_SDK_RISCV=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.0/toolchain_linux-x86_64_riscv64-zephyr-elf.tar.xz
 
 # Install zephyr SDK
 RUN --mount=type=cache,target=/home/$UN/.cache/cwget,sharing=locked \
@@ -97,3 +110,6 @@ RUN --mount=type=secret,id=FILES_NORDICSEMI_COM_TOKEN,env=FILES_NORDICSEMI_COM_T
 	nrfutil install --package-index-name internal-production device
 RUN --mount=type=secret,id=FILES_NORDICSEMI_COM_TOKEN,env=FILES_NORDICSEMI_COM_TOKEN \
 	nrfutil install --package-index-name internal-production kms
+
+RUN --mount=type=bind,target=/home/doki/bashrc-cat.sh,source=./utils/bashrc-cat.sh \
+	cat /home/doki/bashrc-cat.sh >> ~/.bashrc
