@@ -18,7 +18,7 @@
 #     # An object containing docker container run options.
 #     # See https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.run
 #     mem_limit: 2g
-#   prompt:
+#   input:
 #     # Ask user for input before building the image. Key is the argument passed to the
 #     # Dockerfile, value is a prompt message that user will see.
 #     DOWNLOAD_URL: Provide download URL
@@ -33,7 +33,7 @@
 #     # - MY_DOCKERS_DOCKERFILE  The Dockerfile used.
 #     # - MY_DOCKERS_CONFIG      The "commands.yaml" file that contains this configuration.
 #     # - MY_DOCKERS_TAG         The output image tag.
-#     # - PROMPT_*               The value from "prompt" input.
+#     # - INPUT_*                The value from "prompt" input.
 #     # - PASSWORD_*             The value from "password" input.
 #     # The current directory is not changed when script is executed.
 #     # If you want to make some changes to the image, create container from
@@ -56,17 +56,17 @@
 #
 
 
-docs-zephyr:
-  dockerfile: /home/doki/work/zephyr/docs-zephyr.Dockerfile
-  append: |
-    RUN --mount=type=bind,target=/home/doki/work/zephyr/zephyr/doc/requirements.txt,source=./zephyr/doc/requirements.txt \
-    pip install -r /home/doki/work/zephyr/zephyr/doc/requirements.txt
-    WORKDIR /home/doki/work/zephyr
-  share: /home/doki/work/zephyr
-  options:
-    mem_limit: 5g
-    memswap_limit: 5g
-    cpuset_cpus: 0-3
+# docs-zephyr:
+#   dockerfile: /home/doki/work/zephyr/docs-zephyr.Dockerfile
+#   append: |
+#     RUN --mount=type=bind,target=/home/doki/work/zephyr/zephyr/doc/requirements.txt,source=./zephyr/doc/requirements.txt \
+#     pip install -r /home/doki/work/zephyr/zephyr/doc/requirements.txt
+#     WORKDIR /home/doki/work/zephyr
+#   share: /home/doki/work/zephyr
+#   options:
+#     mem_limit: 5g
+#     memswap_limit: 5g
+#     cpuset_cpus: 0-3
 
 ncs:
   dockerfile: ncs.Dockerfile
@@ -87,7 +87,7 @@ ncs:
       pip install -r req/z/requirements.txt -r req/n/requirements.txt
   postbuild: |
     docker run --privileged -v /dev/bus/usb/:/dev/bus/usb --name tmp-cnt $MY_DOCKERS_TAG \
-      bash -c 'wget --post-data accept_license_agreement=accepted https://www.segger.com/downloads/jlink/JLink_Linux_V798i_x86_64.deb && sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y -qq $PWD/JLink_Linux_V798i_x86_64.deb --fix-broken && rm JLink_Linux_V798i_x86_64.deb'
+      bash -c 'wget --post-data accept_license_agreement=accepted https://www.segger.com/downloads/jlink/JLink_Linux_V836_x86_64.deb && sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y -qq $PWD/JLink_Linux_V836_x86_64.deb --fix-broken && rm JLink_Linux_V836_x86_64.deb'
     docker commit tmp-cnt tmp-img
     docker container rm tmp-cnt
     docker rmi $MY_DOCKERS_TAG
@@ -97,25 +97,37 @@ ncs:
     - /tmp/.X11-unix
     - /home/doki/work
 
-playgr:
-  dockerfile: playgr.Dockerfile
+docker-wine:
+  dockerfile: wine.Dockerfile
+  options:
+    mem_limit: 4g
+    memswap_limit: 4g
+    network_mode: host
+    environment:
+      - DISPLAY=:0
   share:
     - /tmp/.X11-unix
-    - /home/doki/work
+    - /home/doki/my
 
-docker-example:
-  dockerfile: scripts/example.Dockerfile
-  share: /home/doki/my-dockers-example
+# playgr:
+#   dockerfile: playgr.Dockerfile
+#   share:
+#     - /tmp/.X11-unix
+#     - /home/doki/work
+
+# docker-example:
+#   dockerfile: scripts/example.Dockerfile
+#   share: /home/doki/my-dockers-example
 
 spidermonkey:
-  dockerfile: /home/doki/my/spidermonkey-sandbox/sandbox/scripts/Dockerfile
+  dockerfile: /home/doki/my/sandbox/sandbox/scripts/Dockerfile
   options:
     network_mode: host
     environment:
       - DISPLAY=:0
   share:
     - /tmp/.X11-unix
-    - /home/doki/my/spidermonkey-sandbox
+    - /home/doki/my/sandbox
   append: |
     ARG UN
     ARG UI
@@ -126,13 +138,7 @@ spidermonkey:
       echo "$UN ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/$UN
     USER $UN:$GN
     WORKDIR /home/$UN
-    ENV PATH=$PATH:/home/$UN/.local/bin:/usr/local/nvm/versions/node/v18.20.4/bin
+    ENV PATH=$PATH:/home/$UN/.local/bin
     RUN mkdir -p /home/$UN/.local/bin && \
       mkdir -p /home/$UN/.cache
-
-#     RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && \
-#       export NVM_DIR=/home/$UN/.nvm && \
-#       . $NVM_DIR/nvm.sh && \
-#       nvm install 18
-#     RUN export PATH=$PATH:`echo /home/doki/.nvm/versions/node/v18*`/bin && \
-#       echo PATH="\$PATH:$PATH" >> /home/$UN/.profile
+    RUN echo PATH=\$PATH:`echo /usr/local/nvm/versions/node/*`/bin >> /home/$UN/.bashrc

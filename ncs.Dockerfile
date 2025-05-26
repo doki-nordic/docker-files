@@ -4,7 +4,7 @@ FROM ubuntu:22.04
 ARG ARG_LINUX_PACKAGES=" \
     usbutils libusb-1.0-0-dev udev \
     wget curl mc tzdata sudo doxygen mscgen plantuml graphviz iputils-ping \
-    git cmake ninja-build gperf \
+    git cmake ninja-build gperf fuse libfuse2 \
     device-tree-compiler ccache dfu-util \
     python3 python3-dev python3-pip python3-setuptools python3-tk python3-wheel \
     python-is-python3 python3-venv \
@@ -95,6 +95,12 @@ RUN --mount=type=cache,target=/home/$UN/.cache/cwget,sharing=locked \
 	cwget.sh "$ARG_ZEPHYR_SDK_RISCV" arch.tar.xz && tar xf arch.tar.xz && rm arch.tar.xz && \
 	./setup.sh -t riscv64-zephyr-elf -t arm-zephyr-eabi -h -c && \
 	sudo cp sysroots/x86_64-pokysdk-linux/usr/share/openocd/contrib/60-openocd.rules /etc/udev/rules.d
+
+ARG ARG_NRF_CONNECT_DESKTOP=https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-connect-for-desktop/5-1-0/nrfconnect-5.1.0-x86_64.appimage
+
+# Install nRF Connect for Desktop
+RUN wget -O /home/$UN/.local/bin/nrfconnect "$ARG_NRF_CONNECT_DESKTOP"
+RUN chmod +x /home/$UN/.local/bin/nrfconnect
 
 # Copy startup script
 RUN mkdir -p /home/$UN/.my-dockers-startup
