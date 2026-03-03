@@ -28,7 +28,7 @@ COPY utils/cwget.sh /usr/bin/
 RUN mkdir -p /_install
 WORKDIR /_install
 
-ARG ARG_NRFUTIL_URL=https://files.nordicsemi.com/ui/api/v1/download?repoKey=swtools&path=external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil&isNativeBrowsing=false
+ARG ARG_NRFUTIL_URL=https://files.nordicsemi.com/ui/api/v1/download?repoKey=swtools&path=external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil&isNativeBrowsing=false&_uuid_my_docker=1
 ARG ARG_NRF_COMMAND_LINE_TOOLS_URL=https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-24-2/nrf-command-line-tools_10.24.2_amd64.deb
 ARG ARG_NRF_UDEV_URL=https://github.com/NordicSemiconductor/nrf-udev/releases/download/v1.0.1/nrf-udev_1.0.1-all.deb
 
@@ -47,7 +47,7 @@ RUN --mount=type=cache,target=/var/cache/cwget,sharing=locked \
 	cd .. && \
 	rm -Rf tmp
 
-ARG ARG_OZONE_URL=https://www.segger.com/downloads/jlink/Ozone_Linux_x86_64.deb
+ARG ARG_OZONE_URL=https://www.segger.com/downloads/jlink/Ozone_Linux_x86_64.deb?_uuid_my_docker=1
 
 # Install Segger Ozone
 RUN --mount=type=cache,target=/var/cache/cwget,sharing=locked \
@@ -80,10 +80,10 @@ RUN --mount=type=cache,target=/home/$UN/.cache/pip,sharing=locked \
 	sudo chmod 777 /home/$UN/.cache/pip && \
 	pip install west
 
-ARG ARG_ZEPHYR_SDK=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.0/zephyr-sdk-0.17.0_linux-x86_64_minimal.tar.xz
-ARG ARG_ZEPHYR_SDK_HOST=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.0/hosttools_linux-x86_64.tar.xz
-ARG ARG_ZEPHYR_SDK_ARM=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.0/toolchain_linux-x86_64_arm-zephyr-eabi.tar.xz
-ARG ARG_ZEPHYR_SDK_RISCV=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.0/toolchain_linux-x86_64_riscv64-zephyr-elf.tar.xz
+ARG ARG_ZEPHYR_SDK=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.4/zephyr-sdk-0.17.4_linux-x86_64_minimal.tar.xz
+ARG ARG_ZEPHYR_SDK_HOST=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.4/hosttools_linux-x86_64.tar.xz
+ARG ARG_ZEPHYR_SDK_ARM=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.4/toolchain_linux-x86_64_arm-zephyr-eabi.tar.xz
+ARG ARG_ZEPHYR_SDK_RISCV=https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.4/toolchain_linux-x86_64_riscv64-zephyr-elf.tar.xz
 
 # Install zephyr SDK
 RUN --mount=type=cache,target=/home/$UN/.cache/cwget,sharing=locked \
@@ -96,7 +96,7 @@ RUN --mount=type=cache,target=/home/$UN/.cache/cwget,sharing=locked \
 	./setup.sh -t riscv64-zephyr-elf -t arm-zephyr-eabi -h -c && \
 	sudo cp sysroots/x86_64-pokysdk-linux/usr/share/openocd/contrib/60-openocd.rules /etc/udev/rules.d
 
-ARG ARG_NRF_CONNECT_DESKTOP=https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-connect-for-desktop/5-1-0/nrfconnect-5.1.0-x86_64.appimage
+ARG ARG_NRF_CONNECT_DESKTOP=https://eu.files.nordicsemi.com/ui/api/v1/download?repoKey=web-assets-com_nordicsemi&path=external%2fswtools%2fncd%2flauncher%2fv5.2.0%2fnrfconnect-5.2.0-x86_64.AppImage
 
 # Install nRF Connect for Desktop
 RUN wget -O /home/$UN/.local/bin/nrfconnect "$ARG_NRF_CONNECT_DESKTOP"
@@ -108,14 +108,15 @@ COPY utils/ncs-startup.sh /home/$UN/.my-dockers-startup/
 RUN sudo chmod +x /home/$UN/.my-dockers-startup/ncs-startup.sh
 
 # Install nrfutil device and kms
-RUN --mount=type=secret,id=FILES_NORDICSEMI_COM_TOKEN,env=FILES_NORDICSEMI_COM_TOKEN \
-	nrfutil config package-index add internal-production \
-	https://files.nordicsemi.com/artifactory/swtools/internal/nrfutil/index/init.json \
-	--environment-variable-name FILES_NORDICSEMI_COM_TOKEN
-RUN --mount=type=secret,id=FILES_NORDICSEMI_COM_TOKEN,env=FILES_NORDICSEMI_COM_TOKEN \
-	nrfutil install --package-index-name internal-production device
-RUN --mount=type=secret,id=FILES_NORDICSEMI_COM_TOKEN,env=FILES_NORDICSEMI_COM_TOKEN \
-	nrfutil install --package-index-name internal-production kms
+# RUN --mount=type=secret,id=FILES_NORDICSEMI_COM_TOKEN,env=FILES_NORDICSEMI_COM_TOKEN \
+# 	nrfutil config package-index add internal-production \
+# 	https://files.nordicsemi.com/artifactory/swtools/internal/nrfutil/index/init.json \
+# 	--environment-variable-name FILES_NORDICSEMI_COM_TOKEN
+# RUN --mount=type=secret,id=FILES_NORDICSEMI_COM_TOKEN,env=FILES_NORDICSEMI_COM_TOKEN \
+# 	nrfutil install --package-index-name internal-production device
+# RUN --mount=type=secret,id=FILES_NORDICSEMI_COM_TOKEN,env=FILES_NORDICSEMI_COM_TOKEN \
+# 	nrfutil install --package-index-name internal-production kms
+RUN nrfutil install device
 
-RUN --mount=type=bind,target=/home/doki/bashrc-cat.sh,source=./utils/bashrc-cat.sh \
-	cat /home/doki/bashrc-cat.sh >> ~/.bashrc
+RUN --mount=type=bind,target=/home/dok/bashrc-cat.sh,source=./utils/bashrc-cat.sh \
+	cat /home/dok/bashrc-cat.sh >> ~/.bashrc

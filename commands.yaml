@@ -48,6 +48,13 @@
 #   prebuild: |
 #     # The same as "postbuild", but before the build.
 #     echo Starting image build...
+#   shell:
+#     # Shell command to execute when user runs command without arguments (as array of strings).
+#     default: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.3.0", "--shell"]
+#     # Arguments to prefix user command (as array of strings).
+#     command: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.3.0", "my-dockers-start", "--", "bash", "-c"]
+#     # Both of above are prefixed with "my-dockers-start" script. If you want to avoid that, just add "my-dockers-start"
+#     # to the "command" array where you actually want it to be.
 #
 # WARNING!!! After modifying command names, remember to do update with
 # the following command:
@@ -95,39 +102,119 @@ ncs:
     docker rmi tmp-img
   share:
     - /tmp/.X11-unix
-    - /home/doki/work
+    - /home/dok/work
+    - /media/dok/old
 
-docker-wine:
-  dockerfile: wine.Dockerfile
+ncs2:
+  dockerfile: ncs.Dockerfile
   options:
-    mem_limit: 4g
-    memswap_limit: 4g
+    mem_limit: 5g
+    memswap_limit: 5g
+    network_mode: host
+    environment:
+      - DISPLAY=:0
+  # password:
+  #   FILES_NORDICSEMI_COM_TOKEN: Artifactory token
+  prebuild: |
+    `dirname $MY_DOCKERS_DOCKERFILE`/utils/ncs-req.sh
+  # Temporary fix for pip issue: pyocd==0.36.0
+  append: |
+    RUN pip install pyocd==0.36.0
+    RUN --mount=type=cache,target=/home/$UN/.cache/pip,sharing=locked \
+      --mount=type=bind,target=/home/$UN/req,source=./_tmp/req \
+      sudo chmod 777 /home/$UN/.cache/pip && \
+      pip install -r req/z/requirements.txt -r req/n/requirements.txt
+  postbuild: |
+    docker run --privileged -v /dev/bus/usb/:/dev/bus/usb --name tmp-cnt $MY_DOCKERS_TAG \
+      bash -c 'wget --post-data accept_license_agreement=accepted https://www.segger.com/downloads/jlink/JLink_Linux_V836_x86_64.deb && sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y -qq $PWD/JLink_Linux_V836_x86_64.deb --fix-broken && rm JLink_Linux_V836_x86_64.deb'
+    docker commit tmp-cnt tmp-img
+    docker container rm tmp-cnt
+    docker rmi $MY_DOCKERS_TAG
+    docker tag tmp-img $MY_DOCKERS_TAG
+    docker rmi tmp-img
+  share:
+    - /tmp/.X11-unix
+    - /home/dok/work
+    - /media/dok/old
+
+ncs3:
+  dockerfile: ncs3.Dockerfile
+  options:
+    mem_limit: 5g
+    memswap_limit: 5g
+    network_mode: host
+    environment:
+      - DISPLAY=:0
+  # prebuild: |
+  #   `dirname $MY_DOCKERS_DOCKERFILE`/utils/ncs-req.sh
+  # append: |
+  #   RUN --mount=type=cache,target=/home/$UN/.cache/pip,sharing=locked \
+  #     --mount=type=bind,target=/home/$UN/req,source=./_tmp/req \
+  #     sudo chmod 777 /home/$UN/.cache/pip && \
+  #     pip install -r req/z/requirements.txt -r req/n/requirements.txt
+  postbuild: |
+    docker run --privileged -v /dev/bus/usb/:/dev/bus/usb --name tmp-cnt $MY_DOCKERS_TAG \
+      bash -c 'wget --post-data accept_license_agreement=accepted https://www.segger.com/downloads/jlink/JLink_Linux_V924_x86_64.deb && sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y -qq $PWD/JLink_Linux_V924_x86_64.deb --fix-broken || true && rm JLink_Linux_V924_x86_64.deb'
+    docker commit tmp-cnt tmp-img
+    docker container rm tmp-cnt
+    docker rmi $MY_DOCKERS_TAG
+    docker tag tmp-img $MY_DOCKERS_TAG
+    docker rmi tmp-img
+  share:
+    - /tmp/.X11-unix
+    - /home/dok/work
+    - /media/dok/old
+    - /run/dbus
+  args:
+    SDK_VERSION: v3.3.0-preview2
+  shell:
+    default: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.3.0-preview2", "--shell"]
+    command: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.3.0-preview2", "my-dockers-start", "--"]
+
+stm32:
+  dockerfile: stm32.Dockerfile
+  options:
+    mem_limit: 5g
+    memswap_limit: 5g
     network_mode: host
     environment:
       - DISPLAY=:0
   share:
     - /tmp/.X11-unix
-    - /home/doki/my
+    - /home/dok/work
+    - /home/dok/Downloads
+
+# docker-wine:
+#   dockerfile: wine.Dockerfile
+#   options:
+#     mem_limit: 4g
+#     memswap_limit: 4g
+#     network_mode: host
+#     environment:
+#       - DISPLAY=:0
+#   share:
+#     - /tmp/.X11-unix
+#     - /home/dok/my
 
 # playgr:
 #   dockerfile: playgr.Dockerfile
 #   share:
 #     - /tmp/.X11-unix
-#     - /home/doki/work
+#     - /home/dok/work
 
 # docker-example:
 #   dockerfile: scripts/example.Dockerfile
-#   share: /home/doki/my-dockers-example
+#   share: /home/dok/my-dockers-example
 
 spidermonkey:
-  dockerfile: /home/doki/my/sandbox/sandbox/scripts/Dockerfile
+  dockerfile: /home/dok/my/spidermonkey-wasi/sandbox/scripts/Dockerfile
   options:
     network_mode: host
     environment:
       - DISPLAY=:0
   share:
     - /tmp/.X11-unix
-    - /home/doki/my/sandbox
+    - /home/dok/my/spidermonkey-wasi
   append: |
     ARG UN
     ARG UI
