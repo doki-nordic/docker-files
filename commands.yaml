@@ -145,13 +145,6 @@ ncs3:
     network_mode: host
     environment:
       - DISPLAY=:0
-  # prebuild: |
-  #   `dirname $MY_DOCKERS_DOCKERFILE`/utils/ncs-req.sh
-  # append: |
-  #   RUN --mount=type=cache,target=/home/$UN/.cache/pip,sharing=locked \
-  #     --mount=type=bind,target=/home/$UN/req,source=./_tmp/req \
-  #     sudo chmod 777 /home/$UN/.cache/pip && \
-  #     pip install -r req/z/requirements.txt -r req/n/requirements.txt
   postbuild: |
     docker run --privileged -v /dev/bus/usb/:/dev/bus/usb --name tmp-cnt $MY_DOCKERS_TAG \
       bash -c 'wget --post-data accept_license_agreement=accepted https://www.segger.com/downloads/jlink/JLink_Linux_V924_x86_64.deb && sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y -qq $PWD/JLink_Linux_V924_x86_64.deb --fix-broken || true && rm JLink_Linux_V924_x86_64.deb'
@@ -162,11 +155,35 @@ ncs3:
     docker rmi tmp-img
   share:
     - /tmp/.X11-unix
+    - /run/dbus
     - /home/dok/work
     - /media/dok/old
-    - /run/dbus
   args:
     SDK_VERSION: v3.3.0-preview2
+  shell:
+    default: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.3.0-preview2", "--shell"]
+    command: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.3.0-preview2", "my-dockers-start", "--"]
+
+ncs4:
+  dockerfile: ncs4.Dockerfile
+  options:
+    mem_limit: 5g
+    memswap_limit: 5g
+    network_mode: host
+    environment:
+      - DISPLAY=:0
+  share:
+    - /tmp/.X11-unix
+    - /run/dbus
+    - /home/dok/work
+    - /media/dok/old
+  args:
+    SDK_VERSION: v3.3.0-preview2
+    ARG_NRFUTIL_URL: https://files.nordicsemi.com/ui/api/v1/download?repoKey=swtools&path=external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil&isNativeBrowsing=false&_uuid_my_docker=2
+    ARG_NRF_UDEV_URL: https://github.com/NordicSemiconductor/nrf-udev/releases/download/v1.0.1/nrf-udev_1.0.1-all.deb
+    ARG_NRF_CONNECT_DESKTOP: https://eu.files.nordicsemi.com/ui/api/v1/download?repoKey=web-assets-com_nordicsemi&path=external%2fswtools%2fncd%2flauncher%2fv5.2.1%2fnrfconnect-5.2.1-x86_64.AppImage
+    ARG_OZONE_URL: https://www.segger.com/downloads/jlink/Ozone_Linux_x86_64.deb?_uuid_my_docker=2
+    ARG_JLINK_URL: https://www.segger.com/downloads/jlink/JLink_Linux_V924_x86_64.deb
   shell:
     default: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.3.0-preview2", "--shell"]
     command: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.3.0-preview2", "my-dockers-start", "--"]

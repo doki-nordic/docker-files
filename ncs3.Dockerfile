@@ -117,3 +117,10 @@ ENV ELECTRON_DISABLE_SANDBOX=1
 
 # RUN --mount=type=bind,target=/home/dok/bashrc-cat.sh,source=./utils/bashrc-cat.sh \
 # 	cat /home/dok/bashrc-cat.sh >> ~/.bashrc
+
+COPY utils/ncs-startup2.sh /home/$UN/.my-dockers-startup/
+RUN sudo chmod +x /home/$UN/.my-dockers-startup/ncs-startup2.sh
+
+RUN --mount=type=bind,target=/home/dok/bashrc-cat.sh,source=./utils/bashrc-cat.sh \
+	cat /home/dok/bashrc-cat.sh >> ~/.nrfutil/share/toolchain-manager-core/*/shell/bashrc
+
