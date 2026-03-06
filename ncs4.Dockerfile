@@ -7,7 +7,7 @@ ARG ARG_LINUX_PACKAGES=" \
     fuse libfuse2 \
     xz-utils file gcc gcc-multilib g++-multilib libsdl2-dev \
 	tk doublecmd-gtk libcanberra-gtk-module libcanberra-gtk3-module \
-	quickjs libnss3 \
+	quickjs libnss3 blt \
 "
 
 ENV TZ=Etc/UTC
@@ -92,7 +92,7 @@ RUN --mount=type=bind,target=/home/$UN/_tmp_sdkman,source=./_tmp/cache/ncs \
 	rm -Rf /home/$UN/ncs/downloads/*
 
 # Install SDK manager in toolchain
-RUN rm /home/dok/ncs/toolchains/*/nrfutil/home/locked && \
+RUN rm /home/$UN/ncs/toolchains/*/nrfutil/home/locked && \
 	nrfutil sdk-manager toolchain launch --ncs-version $SDK_VERSION nrfutil install sdk-manager
 
 # Install Segger JLink
@@ -106,9 +106,17 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 # Add bashrc modifications
 RUN echo exit | nrfutil sdk-manager toolchain launch --ncs-version $SDK_VERSION --shell
-RUN --mount=type=bind,target=/home/dok/bashrc-cat2.sh,source=./utils/bashrc-cat2.sh \
-	cat /home/dok/bashrc-cat2.sh >> `realpath ~/.nrfutil/share/toolchain-manager-core/*`/shell/bashrc
+RUN --mount=type=bind,target=/home/$UN/bashrc-cat2.sh,source=./utils/bashrc-cat2.sh \
+	cat /home/$UN/bashrc-cat2.sh >> `realpath ~/.nrfutil/share/toolchain-manager-core/*`/shell/bashrc
 
 # Add environment workarounds
-RUN --mount=type=bind,target=/home/dok/sdk-env.js,source=./utils/sdk-env.js \
+RUN --mount=type=bind,target=/home/$UN/sdk-env.js,source=./utils/sdk-env.js \
 	qjs sdk-env.js $(find ~/ncs/toolchains -name environment.json -mindepth 1 -maxdepth 2)
+
+# Apply tk workaround
+RUN --mount=type=bind,target=/home/$UN/_tkinter.cpython-312-x86_64-linux-gnu.so,source=./utils/_tkinter.cpython-312-x86_64-linux-gnu.so \
+	env_json="$(find /home/$UN/ncs/toolchains -mindepth 2 -maxdepth 2 -type f -name environment.json -print -quit)" && \
+	[ -n "$env_json" ] && \
+	toolchain_dir="$(dirname "$env_json")" && \
+	mkdir -p "$toolchain_dir/usr/local/lib/python3.12/lib-dynload" && \
+	cp /home/$UN/_tkinter.cpython-312-x86_64-linux-gnu.so "$toolchain_dir/usr/local/lib/python3.12/lib-dynload/"
