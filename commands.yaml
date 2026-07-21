@@ -101,9 +101,13 @@ ncs:
     docker tag tmp-img $MY_DOCKERS_TAG
     docker rmi tmp-img
   share:
+    - /dev/bus/usb
+    - /dev/usb
     - /tmp/.X11-unix
     - /home/dok/work
     - /media/dok/old
+  share_usb_serials: true
+  share_dummy_usb_serials: true
 
 ncs2:
   dockerfile: ncs.Dockerfile
@@ -133,9 +137,13 @@ ncs2:
     docker tag tmp-img $MY_DOCKERS_TAG
     docker rmi tmp-img
   share:
+    - /dev/bus/usb
+    - /dev/usb
     - /tmp/.X11-unix
     - /home/dok/work
     - /media/dok/old
+  share_usb_serials: true
+  share_dummy_usb_serials: true
 
 ncs3:
   dockerfile: ncs3.Dockerfile
@@ -154,10 +162,14 @@ ncs3:
     docker tag tmp-img $MY_DOCKERS_TAG
     docker rmi tmp-img
   share:
+    - /dev/bus/usb
+    - /dev/usb
     - /tmp/.X11-unix
     - /run/dbus
     - /home/dok/work
     - /media/dok/old
+  share_usb_serials: true
+  share_dummy_usb_serials: true
   args:
     SDK_VERSION: v3.3.0-preview2
   shell:
@@ -173,10 +185,14 @@ ncs4:
     environment:
       - DISPLAY=:0
   share:
+    - /dev/bus/usb
+    - /dev/usb
     - /tmp/.X11-unix
     - /run/dbus
     - /home/dok/work
     - /media/dok/old
+  share_usb_serials: true
+  share_dummy_usb_serials: true
   args:
     SDK_VERSION: v3.3.0-preview2
     ARG_NRFUTIL_URL: https://files.nordicsemi.com/ui/api/v1/download?repoKey=swtools&path=external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil&isNativeBrowsing=false&_uuid_my_docker=2
@@ -187,6 +203,62 @@ ncs4:
   shell:
     default: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.3.0-preview2", "--shell"]
     command: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.3.0-preview2", "my-dockers-start", "--"]
+
+ncs5:
+  dockerfile: ncs5.Dockerfile
+  options:
+    mem_limit: 10g
+    memswap_limit: 1g
+    network_mode: host
+    environment:
+      - DISPLAY=:0
+  share:
+    - /dev/bus/usb
+    - /dev/usb
+    - /tmp/.X11-unix
+    - /run/dbus
+    - /home/dok/work
+    - /media/dok/old
+  share_usb_serials: true
+  share_dummy_usb_serials: true
+  args:
+    SDK_VERSION: v3.4.0-rc1
+    ARG_NRFUTIL_URL: https://files.nordicsemi.com/ui/api/v1/download?repoKey=swtools&path=external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil&isNativeBrowsing=false&_uuid_my_docker=2
+    ARG_NRF_UDEV_URL: https://github.com/NordicSemiconductor/nrf-udev/releases/download/v1.0.1/nrf-udev_1.0.1-all.deb
+    ARG_NRF_CONNECT_DESKTOP: https://eu.files.nordicsemi.com/ui/api/v1/download?repoKey=web-assets-com_nordicsemi&path=external%2fswtools%2fncd%2flauncher%2fv5.3.1%2fnrfconnect-5.3.1-x86_64.AppImage
+    ARG_OZONE_URL: https://www.segger.com/downloads/jlink/Ozone_Linux_x86_64.deb?_uuid_my_docker=2
+    ARG_JLINK_URL: https://www.segger.com/downloads/jlink/JLink_Linux_V924_x86_64.deb
+  shell:
+    default: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.4.0-rc1", "--shell"]
+    command: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.4.0-rc1", "my-dockers-start", "--"]
+
+ncs6:
+  dockerfile: ncs6.Dockerfile
+  options:
+    mem_limit: 10g
+    memswap_limit: 11g
+    network_mode: host
+    environment:
+      - DISPLAY=:0
+  share:
+    - /dev/bus/usb
+    - /dev/usb
+    - /tmp/.X11-unix
+    - /run/dbus
+    - /home/dok/work
+    - /media/dok/old
+  share_usb_serials: true
+  share_dummy_usb_serials: true
+  args:
+    SDK_VERSION: v3.4.0-rc2
+    ARG_NRFUTIL_URL: https://files.nordicsemi.com/ui/api/v1/download?repoKey=swtools&path=external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil&isNativeBrowsing=false&_uuid_my_docker=3
+    ARG_NRF_UDEV_URL: https://github.com/NordicSemiconductor/nrf-udev/releases/download/v1.0.1/nrf-udev_1.0.1-all.deb
+    ARG_NRF_CONNECT_DESKTOP: https://eu.files.nordicsemi.com/ui/api/v1/download?repoKey=web-assets-com_nordicsemi&path=external%2fswtools%2fncd%2flauncher%2fv5.3.2%2fnrfconnect-5.3.2-x86_64.AppImage
+    ARG_OZONE_URL: https://www.segger.com/downloads/jlink/Ozone_Linux_V350_x86_64.deb
+    ARG_JLINK_URL: https://www.segger.com/downloads/jlink/JLink_Linux_V960_x86_64.deb
+  shell:
+    default: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.4.0-rc2", "--shell"]
+    command: ["nrfutil", "sdk-manager", "toolchain", "launch", "--ncs-version", "v3.4.0-rc2", "my-dockers-start", "--"]
 
 stm32:
   dockerfile: stm32.Dockerfile
